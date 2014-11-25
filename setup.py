@@ -1,4 +1,9 @@
-﻿
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+__author__ = 'baixue'
+
+
 from distutils.core import setup
 import py2exe
 

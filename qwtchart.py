@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#------------------------------------------------------------------------------
 
+__author__ = 'baixue'
 
 from PyQt4 import Qt
 import PyQt4.Qwt5 as Qwt
