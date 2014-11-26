@@ -7,6 +7,7 @@ import math
 from PyQt4 import QtCore, QtGui, Qt
 import PyQt4.Qwt5 as Qwt
 import numpy as np
+from LoadThread import Worker
 
 
 class Chart(Qwt.QwtPlot):
@@ -58,15 +59,15 @@ class Chart(Qwt.QwtPlot):
         mX.setLabel(Qwt.QwtText('Maker:X'))
         mX.setLabelAlignment(Qt.Qt.AlignRight | Qt.Qt.AlignTop)
         mX.setLineStyle(Qwt.QwtPlotMarker.VLine)
-        mX.setXValue(500)
+        mX.setXValue(5000)
         mX.setLinePen(Qt.QPen(Qt.Qt.green, 1, Qt.Qt.DashDotLine))
         mX.attach(self)
 
 
         #Initialize data
         self.x = np.arange(0.0, 10001.0, 1.0)
-        self.curveAData = np.zeros(len(self.x), Float)
-        self.curveBData = np.zeros(len(self.x), Float)
+        self.curveAData = np.zeros(len(self.x), np.float)
+        self.curveBData = np.zeros(len(self.x), np.float)
 
         
     def setData(self, AData, BData):
@@ -87,34 +88,66 @@ class Chart(Qwt.QwtPlot):
         self.replot()
 
     
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtGui.QWidget):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setWindowIcon(Qt.QIcon(":/images/images/logo.png"))
         self.setWindowOpacity(1.0)
         self.setMinimumSize(800,600)
+        
         self.chart = Chart()
-        self.setCentralWidget(self.chart)
-        #data
-        self.count = 0
-        self.start(50)
+        self.btn_start = QtGui.QPushButton('start')
+        self.btn_stop = QtGui.QPushButton('stop')
+
+        self.btn_start.clicked.connect(self.start)
+        self.btn_stop.clicked.connect(self.stop)
+
+        self.layout = QtGui.QHBoxLayout()
+        self.layout.addWidget(self.btn_start)
+        self.layout.addWidget(self.btn_stop)
+
+        mainLayout = QtGui.QVBoxLayout()
+        mainLayout.addWidget(self.chart)
+        mainLayout.addLayout(self.layout)
+
+        self.setLayout(mainLayout)
+        
+        self.task_DAQ = Worker(self.acquise, 'DAQ')
+
+    def acquise(self):
+        while True:
+            FAIEvent = WaitFAIEvent(DriverHandle, timeout)
+            AI_Terminated = FAIEvent[0]
+            if AI_Terminated == True:break
+            AI_BufferHalfReady = FAIEvent[1]
+            AI_BufferFullReady = FAIEvent[2]
+            if AI_BufferHalfReady | AI_BufferFullReady:
+                overRun = DRV_FAITransfer(DriverHandle, pUserBuf, count, start=0, DataType=1)
+            if overRun != 0:
+                DRV_ClearOverrun(DriverHandle)
+                data = GetBufferData(pUserBuf, count)
 
     def start(self, interval):
-        self.timerId = self.startTimer(interval)
+        DeviceNum = 0
+        count = 100
+        #Open device
+        DriverHandle = DRV_DeviceOpen(DeviceNum)
+        #Enable event
+        DRV_EnableEvent(DriverHandle, EventType=0xf, Enabled=1, Count=512)
+        #Allocate INT & data buffer for interrupt transfer
+        usINTBuf, pUserBuf = AllocateDataBuffer(count)
+        #Start interrupt transfer
+        DRV_FAIIntStart(DriverHandle, 1000, 0, 4, count, usINTBuf, TrigSrc=0, cyclic=0, IntrCount=1)
+        self.task_DAQ.start()
 
     def stop(self):
-        self.killTimer(self.timerId)
+        self.tash_DAQ.join()
+        DRV_FAIStop(self.DriverHandle)
         
     def timerEvent(self, e):
-        index = self.count%500
-        #aData = [2*math.sin(i) for i in sineData[index : index+10]]
-        AData = sineData[index : index+10]
-        BData = np.ones(10)
-        self.chart.appendData(AData, BData)
-        self.count += 10
+        pass
         
     def closeEvent(self, event):
-        self.stop()
         self.close()
 
 
