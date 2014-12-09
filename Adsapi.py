@@ -348,7 +348,7 @@ def DRV_FAIIntScanStart(DriverHandle, SampleRate, NumChans, StartChan, count, pu
     if GainList == None:
         GainList = [0]*NumChans
     for i, e in enumerate(GainList):
-        GainArray[i] = e
+        GainList[i] = e
     PT_MAIConfig.GainList = GainList
     PT_FAIIntScanStart.buffer = pusINTBuf
     PT_FAIIntScanStart.count = count
@@ -501,7 +501,7 @@ def DRV_FAIDmaScanStart(DriverHandle, SampleRate, NumChans, StartChan, buf, coun
     if GainList == None:
         GainList = [0]*NumChans
     for i, e in enumerate(GainList):
-        GainArray[i] = e
+        GainList[i] = e
     PT_FAIDmaScanStart.GainList = GainList
     PT_FAIDmaScanStart.buffer = buf
     PT_FAIDmaScanStart.count = count

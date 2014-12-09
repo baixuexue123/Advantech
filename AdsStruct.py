@@ -799,12 +799,12 @@ PT_WritePortWord = tagPT_WritePortWord
 LPT_WritePortWord = POINTER(tagPT_WritePortWord)
 
 
-class tagPT_ReadPortDWord(Structure):
+class tagPT_ReadPortDword(Structure):
     _fields_ = [("port", c_ushort),
                 ("DWordData", POINTER(c_ulong))
         ]
-PT_DioReadPortDWord = tagPT_ReadPortDWord
-LPT_ReadPortDWord = POINTER(tagPT_ReadPortDWord)
+PT_DioReadPortDword = tagPT_ReadPortDword
+LPT_ReadPortDword = POINTER(tagPT_ReadPortDword)
 
 
 class tagPT_WritePortDword(Structure):
